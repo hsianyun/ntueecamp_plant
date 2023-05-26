@@ -1,7 +1,7 @@
-#define left2_light 2
-#define left1_light 3
-#define right1_light 4
-#define right2_light 5
+#define left2_light A5
+#define left1_light A4
+#define right1_light A3
+#define right2_light A2
 #define MotorR_I1      7 //定義 A1 接腳（右）
 #define MotorR_I2      10 //定義 A2 接腳（右）
 #define MotorR_PWMR    6//定義 ENA (PWM調速) 接腳
@@ -25,10 +25,10 @@ void setup() {
   Serial.begin(9600);
 }
 
-int _l2, _l1, _r1, _r2;
+float _l2, _l1, _r1, _r2;
 float error = 0;
-float _w2 = 0.8;
-float _w1 = 0.4;
+float _w2 = 0.0032;
+float _w1 = 0.0016;
 int amp = 50;
 int numofLight = 0;
 int vL = 0, vR = 0;
@@ -36,34 +36,29 @@ int vL = 0, vR = 0;
 void loop() {
   // put your main code here, to run repeatedly:
   //有光是0，沒光是1
-  _l2 = 1 - digitalRead(left2_light);
-  _l1 = 1 - digitalRead(left1_light);
-  _r1 = 1 - digitalRead(right1_light);
-  _r2 = 1 - digitalRead(right2_light);
+  _l2 = 255 - analogRead(left2_light);
+  _l1 = 255 - analogRead(left1_light);
+  _r1 = 255 - analogRead(right1_light);
+  _r2 = 255 - analogRead(right2_light);
   //transfer to 1 when there is light and 0 if there is no light
-  numofLight = _l2 + _l1 + _r1 + _r2;
   error = _w2*_l2 + _w1*_l1 - _w1*_r1 - _w2*_r2;
-  if(numofLight == 0){
-    vL = 0; vR = 0;
-  }else{
-    error = error * 50 / numofLight;
-    vL = 210 - error;   vR = 210 + error;
-    if(vL > 255){
-      vL = 255;
-    }
-    if(vR > 255){
-      vR = 255;
-    }
+  error = error * 10;
+  vL = 210 - error;   vR = 210 + error;
+  if(vL > 255){
+    vL = 255;
   }
+  if(vR > 255){
+    vR = 255;
+  }
+  
 
   MotorWriting(vL, vR);
 
-  Serial.println(numofLight);
   Serial.print("vL=");
   Serial.print(vL);
   Serial.print("\tvR=");
   Serial.println(vR);
-  // delay(200);
+  delay(200);
 }
 
 void MotorWriting(double vL, double vR) {
